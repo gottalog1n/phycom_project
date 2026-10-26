@@ -6,6 +6,13 @@
 
 ---
 
+## 🔗 ลิงก์ที่เกี่ยวข้อง (Project Links)
+- **🌐 Live Dashboard:** [ดูหน้าเว็บไซต์แสดงผลแบบเรียลไทม์](https://gottalog1n.github.io/phycom_project)
+- **🎬 YouTube Demo:** [ดูคลิปวิดีโอสาธิตการทำงาน](YOUR_YOUTUBE_LINK)
+- **⚡ Tinkercad:** [ดูแผนผังวงจรและการจำลองบน Tinkercad](YOUR_TINKERCAD_LINK)
+
+---
+
 ## ✨ ฟีเจอร์หลัก (Key Features)
 - **Smart Detection:** ตรวจจับวัตถุในระยะ < 150 ซม. โดยมีการนับซ้ำเพื่อยืนยัน (Consecutive Trigger Filter) ป้องกันการแจ้งเตือนผิดพลาด (False Alarm)
 - **Local Alerts:** แจ้งเตือนผู้บุกรุกผ่านเสียง Buzzer, ไฟ LED สีแดงกะพริบ และหน้าจอ LCD 

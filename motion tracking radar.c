@@ -3,12 +3,12 @@
 #include <WiFiS3.h> 
 
 // --- 1. ตั้งค่า Wi-Fi ---
-const char* ssid = "YOUR WIFI USERNAME";
-const char* password = "YOUR WIFI PASSWORD";
+const char* ssid = "WIFI USERNAME";
+const char* password = "WIFI PASSWORD";
 
 // --- 2. ตั้งค่า Discord Bot (Direct Message) ---
-const char* botToken = "YOUR TOKEN";       
-const char* dmChannelId = "YOUR CHANNEL ID"; 
+const char* botToken = "YOUR BOT TOKEN";       
+const char* dmChannelId = "ID"; 
 
 // --- 3. ตั้งค่า Google Sheets Web App ---
 const char* sheetsHost = "script.google.com";
@@ -30,7 +30,7 @@ const unsigned long checkInterval = 50;
 unsigned long lastCheckTime = 0;
 
 unsigned long lastDiscordAlertTime = 0;
-const unsigned long alertCooldown = 2000; 
+const unsigned long alertCooldown = 10000; // *ปรับเป็น 10000 (10 วิ) เพื่อลดอาการจอค้างเวลาแจ้งเตือนบุกรุก
 
 unsigned long lastBlinkTime = 0;
 bool blinkState = false;
@@ -153,6 +153,9 @@ void setup() {
   Serial.println("\nWiFi Connected!");
   lcdSetEmpty();
   setNormalState();
+
+  // จุดเพิ่มที่ 1: แจ้งเตือนเข้า Discord ตอนเชื่อมต่อ Wi-Fi สำเร็จครั้งแรก (หลังจ่ายไฟ/รีเซ็ตบอร์ด)
+  sendDiscordDM("✅ **System Online:** Motion Tracking Radar เริ่มทำงานและเชื่อมต่อเครือข่ายสำเร็จ!");
 }
 
 void loop() {
@@ -191,10 +194,13 @@ void loop() {
     return; // สำคัญ: ออกจาก loop() ไปเลย ไม่ต้องรันคำสั่งเซนเซอร์ด้านล่างจนกว่าเน็ตจะมา
   }
 
-  // หากเพิ่งกลับมาเชื่อมต่อ Wi-Fi สำเร็จ
+  // หากเพิ่งกลับมาเชื่อมต่อ Wi-Fi สำเร็จ (Reconnect)
   if (!wifiConnected) {
     wifiConnected = true;
     Serial.println("✅ Wi-Fi Reconnected! Resuming radar...");
+    
+    // จุดเพิ่มที่ 2: แจ้งเตือนเข้า Discord ว่าระบบกลับมาออนไลน์แล้ว
+    sendDiscordDM("🔄 **System Reconnected:** ระบบกลับมาเชื่อมต่อเครือข่ายและพร้อมตรวจจับอีกครั้ง!");
     
     // รีเซ็ตหน้าจอและเปิดไฟสถานะการทำงานปกติกลับมา
     lastState = EMPTY;
@@ -221,8 +227,16 @@ void loop() {
       if (currentMillis - lastDiscordAlertTime >= alertCooldown) {
         String alertText = "🚨 **แจ้งเตือนความปลอดภัย:** ตรวจพบวัตถุในระยะ **" + String(distance, 1) + " cm**!";
         
+        // --- เปลี่ยนข้อความหน้าจอบอกว่ากำลังส่งข้อมูล (แก้ค้าง) ---
+        lcd.setCursor(0, 1);
+        lcd.print("Sending Data... "); 
+        
         logToGoogleSheets(distance);
         sendDiscordDM(alertText);
+        
+        // ส่งเสร็จเปลี่ยนจอภาพกลับมาหน้าเตือน
+        lcd.setCursor(2, 1);
+        lcd.print("Foreign Body  "); 
         
         lastDiscordAlertTime = millis();
       }

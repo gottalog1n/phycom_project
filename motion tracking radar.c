@@ -3,12 +3,12 @@
 #include <WiFiS3.h> 
 
 // --- 1. ตั้งค่า Wi-Fi ---
-const char* ssid = "Aldnii";
-const char* password = "0937719597n";
+const char* ssid = "YOUR WIFI USERNAME";
+const char* password = "YOUR WIFI PASSWORD";
 
 // --- 2. ตั้งค่า Discord Bot (Direct Message) ---
-const char* botToken = "MTU2NDE2MTQ5NDc0MzEyNjA3Ng.GpxYO7.YUoyDnm_zzXStbel0RPzldoSf4MvHWXLbHuuF4";       
-const char* dmChannelId = "1564163123085316187"; 
+const char* botToken = "YOUR TOKEN";       
+const char* dmChannelId = "YOUR CHANNEL ID"; 
 
 // --- 3. ตั้งค่า Google Sheets Web App ---
 const char* sheetsHost = "script.google.com";

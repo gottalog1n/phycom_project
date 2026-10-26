@@ -1,75 +1,54 @@
-# 🚨 Real-Time Ultrasonic Security Radar (with Discord Alerts)
+# 📡 Motion Tracking Radar 
 
-![Arduino](https://img.shields.io/badge/-Arduino-00979D?style=for-the-badge&logo=Arduino&logoColor=white)
-![C++](https://img.shields.io/badge/C-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)
-![Discord API](https://img.shields.io/badge/Discord%20Webhook-5865F2?style=for-the-badge&logo=discord&logoColor=white)
+**Physical Computing Project 2026 — School of Information Technology, KMITL**
 
-A high-performance, real-time security system built on the **Arduino Uno R4 WiFi**. It uses an HC-SR04 ultrasonic sensor to detect intruders and instantly sends a notification to a Discord server via Webhooks, without blocking the main processor loop.
-
-> **🎥 [Insert a link to a GIF or YouTube video showing the radar working here]**
+ระบบเฝ้าระวังและตรวจจับสิ่งแปลกปลอมในพื้นที่ระยะไกล (Motion Tracking Radar) สร้างขึ้นเพื่อแก้ปัญหาการพลาดการรับรู้ต่อสภาพแวดล้อมขณะที่ผู้ใช้งานไม่อยู่ในบริเวณนั้น โดยระบบจะตรวจจับวัตถุ แจ้งเตือนหน้างาน และส่งข้อมูลแจ้งเตือนออนไลน์แบบเรียลไทม์
 
 ---
 
-## ✨ Features
-
-- **⚡ Real-Time Discord Alerts:** Sends instant HTTP POST requests to a Discord Webhook.
-- **⏱️ Non-Blocking Architecture:** Uses `millis()` instead of `delay()` to ensure the siren, LEDs, and network requests run simultaneously without freezing the board.
-- **📟 I2C LCD Integration:** Real-time status display ("Area is Empty" / "WARNING!!").
-- **🔊 Visual & Audio Alarms:** Triggers a red LED and an active buzzer instantly upon detection.
-- **🛡️ Rate-Limit Protection:** Built-in cooldown timer prevents Discord API bans (Error 429).
-
----
-
-## 🛠️ Hardware Requirements
-
-- **Arduino Uno R4 WiFi** (or ESP32/ESP8266 with minor code adjustments)
-- **HC-SR04** Ultrasonic Distance Sensor
-- **16x2 LCD Display** (with I2C Backpack)
-- **1x Red LED** + 220Ω Resistor
-- **1x Green LED** + 220Ω Resistor
-- **1x Active Buzzer**
-- Breadboard & Jumper Wires
+## ✨ ฟีเจอร์หลัก (Key Features)
+- **Smart Detection:** ตรวจจับวัตถุในระยะ < 150 ซม. โดยมีการนับซ้ำเพื่อยืนยัน (Consecutive Trigger Filter) ป้องกันการแจ้งเตือนผิดพลาด (False Alarm)
+- **Local Alerts:** แจ้งเตือนผู้บุกรุกผ่านเสียง Buzzer, ไฟ LED สีแดงกะพริบ และหน้าจอ LCD 
+- **IoT Notification:** ส่งข้อความแจ้งเตือนอัตโนมัติเข้า **Discord** ทันทีที่พบผู้บุกรุก
+- **Data Logging:** บันทึกประวัติการตรวจจับ (ระยะห่าง, วันเวลา, สถานะ) ลงใน **Google Sheets** โดยอัตโนมัติ
+- **Auto-Reconnect:** หากเชื่อมต่อ Wi-Fi ไม่สำเร็จหรือเน็ตหลุด ระบบจะระงับการแจ้งเตือนออนไลน์ชั่วคราว และพยายามเชื่อมต่อใหม่ให้อัตโนมัติ (ระบบหน้างานยังทำงานปกติ)
+- **Real-time Dashboard:** มีหน้าเว็บ HTML ที่ใช้ JSONP ดึงข้อมูลจาก Google Sheets มาแสดงผลแบบสดๆ ทุก 5 วินาที (Bypass CORS)
 
 ---
 
-## 🔌 Wiring Diagram
+## 🛠 ฮาร์ดแวร์และการต่อวงจร (Hardware & Pinout)
 
-| Component | Pin on Component | Pin on Uno R4 WiFi |
+| อุปกรณ์ (Component) | พินที่เชื่อมต่อ (Pin Assignment) | หน้าที่การทำงาน |
 | :--- | :--- | :--- |
-| **HC-SR04** | VCC | 5V |
-| | GND | GND |
-| | Trig | Pin 11 |
-| | Echo | Pin 10 |
-| **I2C LCD** | VCC | 5V |
-| | GND | GND |
-| | SDA | SDA (A4) |
-| | SCL | SCL (A5) |
-| **Red LED** | Anode (+) | Pin 3 |
-| **Green LED** | Anode (+) | Pin 4 |
-| **Buzzer** | Positive (+) | Pin 2 |
+| **Ultrasonic Sensor (HC-SR04)** | Trig: `Pin 11`, Echo: `Pin 10` | ตรวจจับและวัดระยะห่างวัตถุ |
+| **LiquidCrystal I2C (16x2)** | `SDA`, `SCL` (Address `0x27`) | แสดงสถานะพื้นที่ Empty / Warning และสถานะ Wi-Fi |
+| **Active Buzzer** | `Pin 2` | ส่งสัญญาณเสียงเตือนภัย |
+| **Red LED** | `Pin 3` | ไฟกะพริบเตือนภัย |
+| **Green LED** | `Pin 4` | ไฟสถานะสแตนด์บาย (พื้นที่ปลอดภัย) |
+
+*(หมายเหตุ: ใช้บอร์ดไมโครคอนโทรลเลอร์ที่มีโมดูล Wi-Fi เช่น Arduino UNO R4 WiFi / WiFiS3)*
 
 ---
 
-## 🚀 Installation & Setup
+## 💻 การติดตั้งและใช้งาน (Setup & Installation)
 
-### 1. Arduino IDE Setup
-1. Install the **Arduino UNO R4 Boards** package from the Boards Manager.
-2. Go to **Sketch > Include Library > Manage Libraries** and install:
-   - `LiquidCrystal_I2C` (by Frank de Brabander)
+### 1. ไลบรารีที่ต้องใช้ (Dependencies)
+ตรวจสอบให้แน่ใจว่าติดตั้งไลบรารีเหล่านี้ใน Arduino IDE แล้ว:
+- `Wire.h` (มีในตัว)
+- `LiquidCrystal_I2C` (สำหรับจอ LCD)
+- `WiFiS3` (สำหรับการเชื่อมต่อเครือข่าย)
 
-### 2. Discord Webhook Setup
-1. Go to your Discord Server Settings > Integrations > Webhooks.
-2. Click **New Webhook**, name it, and copy the **Webhook URL**.
-3. *Note:* The URL looks like this: `https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN`.
-
-### 3. Code Configuration
-Open the `.ino` file and update the following lines with your credentials:
+### 2. การตั้งค่าตัวแปรในโค้ด (Configuration)
+ก่อนอัปโหลดโค้ดลงบอร์ด ให้แก้ไขตัวแปรส่วนหัวในไฟล์ `.ino` ดังนี้:
 
 ```cpp
-// --- 1. Wi-Fi Settings ---
-const char* ssid = "YOUR_WIFI_SSID";
+// 1. ตั้งค่า Wi-Fi ของคุณ
+const char* ssid = "YOUR_WIFI_NAME";
 const char* password = "YOUR_WIFI_PASSWORD";
 
-// --- 2. Discord Webhook Settings ---
-const char* discordHost = "discord.com";
-const char* discordPath = "/api/webhooks/YOUR_ID/YOUR_TOKEN"; // Remove "[https://discord.com](https://discord.com)"
+// 2. ตั้งค่า Discord Bot (Bot Token และ Channel ID)
+const char* botToken = "YOUR_DISCORD_BOT_TOKEN";       
+const char* dmChannelId = "YOUR_CHANNEL_ID"; 
+
+// 3. ตั้งค่า Google Sheets (URL จาก Google Apps Script)
+const char* sheetsPath = "/macros/s/YOUR_SCRIPT_ID/exec";

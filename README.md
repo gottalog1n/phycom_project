@@ -7,9 +7,9 @@
 ---
 
 ## 🔗 ลิงก์ที่เกี่ยวข้อง (Project Links)
-- **🌐 Live Dashboard:** [ดูหน้าเว็บไซต์แสดงผลแบบเรียลไทม์](https://gottalog1n.github.io/phycom_project)
+- **🌐 Live Dashboard:** [ดูหน้าเว็บไซต์แสดงผลแบบเรียลไทม์](http://127.0.0.1:5500/index.html)
 - **🎬 YouTube Demo:** [ดูคลิปวิดีโอสาธิตการทำงาน](YOUR_YOUTUBE_LINK)
-- **⚡ Tinkercad:** [ดูแผนผังวงจรและการจำลองบน Tinkercad](YOUR_TINKERCAD_LINK)
+- **⚡ Tinkercad:** [ดูแผนผังวงจรและการจำลองบน Tinkercad](https://www.tinkercad.com/things/2wPerupvwLj-motion-tracking-radar?sharecode=Cfw9TqBLlTuAfajSBgSiyv99cDoRF2JYGbCNHqPSH_I)
 
 ---
 

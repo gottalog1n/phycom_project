@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Ergonomic & Posture Monitor - Physical Computing 2026</title>
+  <title>Motion Tracking Radar - Physical Computing 2026</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
@@ -63,6 +63,30 @@
       align-items: center;
       gap: 8px;
     }
+    h3 {
+      font-size: 1.05rem;
+      color: #334155;
+      margin: 16px 0 8px;
+    }
+    .table-container {
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #334155;
+      font-weight: 600;
+    }
     .video-wrapper {
       position: relative;
       padding-bottom: 56.25%;
@@ -121,24 +145,75 @@
     <section>
       <h2>📄 บทคัดย่อ (Abstract)</h2>
       <p>
-        โครงงานนี้นำเสนอระบบเฝ้าระวังพื้นที่ระยะไกลเพื่อแก้ปัญหาการพลาดการรับรู้ต่อสิ่งแวดล้อมหรือเหตุการณ์ภายนอกขณะที่ไม่อยู่ในบริเวณนั้น โดยระบบใช้เซนเซอร์วัดระยะทางอัลตราโซนิก (Ultrasonic Sensor) ทำหน้าที่ตรวจจับการเคลื่อนไหวหรือการบุกรุกพื้นที่ เมื่อพบวัตถุเข้ามาในระยะที่กำหนด ไมโครคอนโทรลเลอร์จะประมวลผลและส่งสัญญาณแจ้งเตือนแบบครอบคลุม ทั้งในพื้นที่จริงผ่านเสียงสัญญาณเตือน (Buzzer) และไฟแสดงสถานะ (LED) รวมถึงส่งการแจ้งเตือนทันทีไปยังผู้ใช้ผ่าน LINE Notification ช่วยให้รับรู้เหตุการณ์ได้อย่างรวดเร็วและเพิ่มความปลอดภัยให้กับพื้นที่แม้ไม่ได้อยู่ในจุดเกิดเหตุ      </p>
+        โครงงานนี้นำเสนอระบบเฝ้าระวังและตรวจจับสิ่งแปลกปลอมในพื้นที่ระยะไกล เพื่อแก้ปัญหาการพลาดการรับรู้ต่อสภาพแวดล้อมหรือเหตุการณ์ภายนอกขณะที่ผู้ใช้งานไม่อยู่ในบริเวณนั้น โดยระบบใช้เซนเซอร์วัดระยะทางอัลตราโซนิก (Ultrasonic Sensor) ตรวจจับความเคลื่อนไหวและระยะห่างของวัตถุอย่างต่อเนื่อง เมื่อพบวัตถุเข้ามาในรัศมีที่กำหนด (&lt; 150 ซม.) ต่อเนื่องตามเกณฑ์ ระบบจะเข้าสู่โหมดเตือนภัยทันที โดยสั่งการให้ Buzzer ส่งสัญญาณเสียงเตือน, ไฟ LED สีแดงกะพริบ, หน้าจอ LCD I2C เปลี่ยนสถานะแสดงข้อความเตือนภัย และส่งข้อความแจ้งเตือนอัตโนมัติพร้อมระบุเวลาเข้าสู่ห้องแชท Discord ผ่าน Webhook Notification ช่วยให้ผู้ใช้สามารถรับรู้สถานการณ์ได้แบบเรียลไทม์ผ่านสมาร์ตโฟนหรือคอมพิวเตอร์อย่างแม่นยำและรวดเร็ว
+      </p>
     </section>
 
     <!-- 2. รายละเอียดและหลักการทำงาน -->
     <section>
       <h2>⚙️ รายละเอียดระบบและหลักการทำงาน</h2>
+      
+      <h3>1. สถาปัตยกรรมอินพุตและเอาต์พุต (I/O Architecture)</h3>
       <ul>
-        <li><strong>Input:</strong> ระยะห่างจากเซนเซอร์อัลตราโซนิก (HC-SR04), ปุ่มกด Reset/Setup</li>
-        <li><strong>Processing:</strong> ไมโครคอนโทรลเลอร์ ESP32 ตรวจจับเงื่อนไขระยะห่าง</li>
-        <li><strong>Output:</strong> สัญญาณเตือน Buzzer และหลอดไฟ LED แสดงสถานะการเคลื่อนไหว</li>
+        <li><strong>Input:</strong> Ultrasonic Sensor (HC-SR04) ตรวจวัดระยะห่างของวัตถุทุกๆ 60 ms แบบ Non-blocking</li>
+        <li><strong>Processing Unit:</strong> ไมโครคอนโทรลเลอร์ประมวลผลคำนวณระยะทางและนับรอบการตรวจจับ (Consecutive Trigger Filter) เพื่อตัดปัญหา False Alarm</li>
+        <li><strong>Local Output:</strong> จอ LCD I2C (16x2), Active Buzzer เตือนภัย และ LED Indicator (สีเขียว: ปกติ / สีแดง: แจ้งเตือน)</li>
+        <li><strong>Remote Output:</strong> ระบบส่งสัญญาณแจ้งเตือนอัตโนมัติเข้าสู่ Discord Server ผ่าน Discord Webhook API</li>
       </ul>
+
+      <h3>2. สถานะการทำงานของระบบ (System States)</h3>
+      <ul>
+        <li><strong>Normal State (Area is Empty):</strong> ไฟ LED สีเขียวติดสว่าง, LED สีแดงและ Buzzer ปิด, หน้าจอ LCD แสดงข้อความ <code>"Area is Empty"</code></li>
+        <li><strong>Detection & Validation:</strong> เมื่อตรวจพบวัตถุระยะน้อยกว่า 150 ซม. ระบบจะนับสะสมรอบตรวจจับ (Trigger Count) หากตรวจพบต่อเนื่องครบ 5 ครั้ง จะเปลี่ยนสถานะเข้าสู่เตือนภัยทันที</li>
+        <li><strong>Alert Mode (Warning & Notification):</strong> ไฟ LED สีเขียวดับ, LED สีแดงกะพริบพร้อม Buzzer ส่งสัญญาณเสียงต่อเนื่อง, หน้าจอ LCD แสดง <code>"WARNING!! Foreign Body"</code> พร้อมส่งสัญญาณเตือนเข้า Discord ทันที จนกว่าวัตถุจะออกจากพื้นที่</li>
+      </ul>
+
+      <h3>3. ตารางการเชื่อมต่อฮาร์ดแวร์ (Pin Connection)</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>อุปกรณ์ (Component)</th>
+              <th>พินที่เชื่อมต่อ (Pin Assignment)</th>
+              <th>หน้าที่ (Function)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Ultrasonic Sensor (HC-SR04)</td>
+              <td>Trig: Pin 11, Echo: Pin 10</td>
+              <td>วัดระยะห่างวัตถุแบบสะท้อนคลื่นเสียง</td>
+            </tr>
+            <tr>
+              <td>LiquidCrystal I2C (16x2)</td>
+              <td>SDA, SCL (Address 0x27)</td>
+              <td>แสดงสถานะพื้นที่ Empty / Warning</td>
+            </tr>
+            <tr>
+              <td>Active Buzzer</td>
+              <td>Pin 2</td>
+              <td>ส่งสัญญาณเสียงแจ้งเตือนเมื่อเกิดการบุกรุก</td>
+            </tr>
+            <tr>
+              <td>Red LED</td>
+              <td>Pin 3</td>
+              <td>ไฟกะพริบเตือนภัยเมื่อมีวัตถุเข้ามาในระยะ</td>
+            </tr>
+            <tr>
+              <td>Green LED</td>
+              <td>Pin 4</td>
+              <td>ไฟสถานะสแตนด์บายปกติเมื่อพื้นที่ปลอดภัย</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <!-- 3. Clip VDO (YouTube > 5 นาที) -->
     <section>
       <h2>🎬 คลิปวิดีโอสาธิตการทำงาน</h2>
       <p style="font-size: 0.9rem; color: var(--muted);">
-        วิดีโอนี้อธิบายการทำงานของระบบ แสดงตัวชิ้นงานฮาร์ดแวร์จริง และเห็นหน้าสมาชิกทุกคนในกลุ่มครบถ้วน
+        วิดีโอนี้อธิบายการทำงานของระบบ แสดงตัวชิ้นงานฮาร์ดแวร์จริง และเห็นหน้าสมาชิกทุกคนในกลุ่มครบถ้วน (ความยาวเกิน 5 นาที)
       </p>
       <div class="video-wrapper">
         <!-- นำ VIDEO_ID ของคลิป YouTube มาแทนที่ตรง YOUR_YOUTUBE_VIDEO_ID -->
@@ -149,73 +224,240 @@
     <!-- 4. โปสเตอร์ขนาด A1 -->
     <section>
       <h2>📊 โปสเตอร์ขนาด A1</h2>
-      <p>สรุปแนวคิด โครงสร้างระบบ และผลการทำงานของโครงงาน</p>
-      <!-- เปลี่ยนลิงก์ไปยังไฟล์ PDF หรือรูปภาพโปสเตอร์ที่อัปโหลดไว้ -->
+      <p>สรุปแนวคิด โครงสร้างระบบ แผนผังวงจร และผลการทดสอบการทำงานของโครงงาน</p>
       <a href="./poster_a1.pdf" target="_blank" class="btn">📥 ดาวน์โหลด / ดูโปสเตอร์ขนาดเต็ม (PDF)</a>
     </section>
 
     <!-- 5. Source Code -->
     <section>
       <h2>💻 Source Code</h2>
-      <pre><code>// ตัวอย่างโค้ดควบคุมระบบตรวจจับท่านั่ง (ESP32 / Arduino)
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+      <pre><code>// Motion Tracking Radar with LCD, Alert & Discord Notification
+#include &lt;Wire.h&gt;
+#include &lt;LiquidCrystal_I2C.h&gt;
 
-// Ultrasonic sensor settings
+// Ultrasonic sensor pins
 const int trigPin = 11;
 const int echoPin = 10;
 
-// LED and buzzer (active buzzer controlled via digitalWrite)
+// LED & Buzzer pins
 const int redLed = 3;
 const int greenLed = 4;
 const int buzzer = 2;
 
-// Initialize the LCD (16x2). Check the I2C address (commonly 0x27 or 0x3F)
+// Initialize LCD 16x2 (I2C Address 0x27)
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-// Settings
-const int alertDistance = 150;           // Alarm triggers if distance is less than 150cm
-const unsigned long checkInterval = 60;  // Measurement interval (ms)
+// Distance threshold & interval settings
+const int alertDistance = 150;           // Alert if distance &lt; 150 cm
+const unsigned long checkInterval = 60;  // Loop measurement interval (ms)
 unsigned long lastCheckTime = 0;
 
-// Variable to count consecutive detections under threshold
 int triggerCount = 0;
-
-// Enum to record state (for updating LCD only when state changes)
 enum RadarState { EMPTY, WARNING };
 RadarState lastState = EMPTY;
 
 void setup() {
-  // Initialize ultrasonic sensor pins
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-
-  // Initialize LED and buzzer pins
   pinMode(redLed, OUTPUT);
   pinMode(greenLed, OUTPUT);
   pinMode(buzzer, OUTPUT);
 
-  // Initialize LCD
   lcd.init();
   lcd.backlight();
   lcd.clear();
 
-  // Set initial status: LCD shows "Area is Empty", green LED on
   lcdSetEmpty();
   setNormalState();
-}...
-</code></pre>
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - lastCheckTime &gt;= checkInterval) {
+    lastCheckTime = currentMillis;
+
+    float distance = getDistance();
+
+    if (distance &gt; 0 && distance &lt; alertDistance) {
+      triggerCount++;
+    } else {
+      triggerCount = 0;
+    }
+
+    // Trigger alert only after 5 consecutive detections
+    if (triggerCount &gt;= 5) {
+      if (lastState != WARNING) {
+        lastState = WARNING;
+        lcdSetWarning();
+        // Trigger Discord Webhook Notification via Serial / Network
+      }
+      alertMode();
+      triggerCount = 0;
+    } else {
+      if (lastState != EMPTY) {
+        lastState = EMPTY;
+        lcdSetEmpty();
+        setNormalState();
+      }
+    }
+  }
+}
+
+float getDistance() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  long duration = pulseIn(echoPin, HIGH, 30000);
+  if (duration == 0) return 999.0;
+  return (duration * 0.034 / 2);
+}
+
+void alertMode() {
+  digitalWrite(greenLed, LOW);
+  while (getDistance() &lt; alertDistance) {
+    digitalWrite(redLed, HIGH);
+    digitalWrite(buzzer, HIGH);
+    delay(100);
+    digitalWrite(redLed, LOW);
+    digitalWrite(buzzer, LOW);
+    delay(100);
+  }
+  lcdSetEmpty();
+  setNormalState();
+  lastState = EMPTY;
+}
+
+void setNormalState() {
+  digitalWrite(greenLed, HIGH);
+  digitalWrite(redLed, LOW);
+  digitalWrite(buzzer, LOW);
+}
+
+void lcdSetEmpty() {
+  lcd.clear();
+  lcd.setCursor(1, 0);
+  lcd.print("Area is Empty");
+  lcd.setCursor(0, 1);
+  lcd.print("                ");
+}
+
+void lcdSetWarning() {
+  lcd.clear();
+  lcd.setCursor(4, 0);
+  lcd.print("WARNING!!");
+  lcd.setCursor(2, 1);
+  lcd.print("Foreign Body");
+}</code></pre>
       <div style="margin-top: 16px;">
-        <a href="https://github.com/gottalog1n/phycom_project.git" target="_blank" style="color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+        <a href="https://github.com/gottalog1n/phycom_project" target="_blank" style="color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
           ↗ ดู Source Code ฉบับเต็มบน GitHub Repository
         </a>
+      </div>
+    </section>
+
+    <!-- 6. ข้อมูลบันทึกการทำงาน (Radar Detection Log) แบบ Real-time -->
+    <section>
+      <h2>📊 ข้อมูลบันทึกการทำงาน (Radar Detection Log)</h2>
+      <p>
+        ระบบดึงข้อมูลจาก <strong>Google Sheets</strong> มาแสดงผลแบบเรียลไทม์ (อัปเดตอัตโนมัติทุกๆ 5 วินาที แสดงผล 10 รายการล่าสุด)
+      </p>
+      
+      <a href="https://docs.google.com/spreadsheets/d/1dzfHUYABKal1gT6QtXiXnrTFoDSURhA1aIOOD49Yhno/edit" target="_blank" class="btn" style="background-color: #10b981; margin-bottom: 16px;">
+        📈 ดูแผ่นงานต้นฉบับ
+      </a>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Distance (cm)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="sheet-data-body">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--muted);">กำลังโหลดข้อมูลแบบเรียลไทม์...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
     <footer>
       Physical Computing 2026 — School of Information Technology, KMITL
     </footer>
-  </div>
 
+  </div> <!-- ปิด container -->
+
+  <!-- Script ดึงข้อมูลจาก Google Sheets -->
+  <!-- Script ดึงข้อมูลจาก Google Sheets (เวอร์ชันทะลุบล็อก CORS ด้วย JSONP) -->
+  <script>
+    const SHEET_ID = '1dzfHUYABKal1gT6QtXiXnrTFoDSURhA1aIOOD49Yhno';
+    // ใช้ tqx=responseHandler:handleData เพื่อให้ Google ส่งกลับมาเป็นสคริปต์ แทนที่จะเป็นไฟล์ ทำให้เบราว์เซอร์ไม่บล็อก
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:handleData`;
+
+    // ฟังก์ชันนี้จะเป็นตัวดึงข้อมูล
+    function fetchSheetData() {
+      const script = document.createElement('script');
+      script.src = SHEET_URL;
+      
+      // เมื่อโหลดเสร็จให้ลบสคริปต์ทิ้งเพื่อไม่ให้รกหน้า HTML
+      script.onload = () => script.remove();
+      
+      // ดักจับกรณีที่ Google Sheets ขัดข้อง
+      script.onerror = () => {
+        document.getElementById('sheet-data-body').innerHTML = 
+          '<tr><td colspan="4" style="text-align: center; color: red;">โหลดข้อมูลไม่สำเร็จ (ลองตรวจสอบอินเทอร์เน็ตหรือลิงก์ Sheet)</td></tr>';
+      };
+      
+      document.body.appendChild(script);
+    }
+
+    // ฟังก์ชันนี้จะถูกเรียกอัตโนมัติเมื่อข้อมูลถูกส่งกลับมาจาก Google
+    window.handleData = function(data) {
+      const tbody = document.getElementById('sheet-data-body');
+      const rows = data.table.rows;
+      tbody.innerHTML = ''; 
+      
+      if (!rows || rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">ไม่มีข้อมูลการตรวจจับ</td></tr>';
+          return;
+      }
+
+      let count = 0;
+      // อ่านข้อมูลจากแถวล่าสุดย้อนกลับไปหาแถวเก่าสุด (แสดง 10 แถวล่าสุด)
+      for (let i = rows.length - 1; i >= 0 && count < 10; i--) {
+         if (!rows[i] || !rows[i].c) continue;
+         
+         const tr = document.createElement('tr');
+         
+         // ดึงข้อมูล 4 คอลัมน์ (Date, Time, Distance, Status)
+         for (let j = 0; j < 4; j++) {
+            const td = document.createElement('td');
+            let cellValue = "";
+            if (rows[i].c[j]) {
+              // ถ้าข้อมูลจัด format มาแล้ว (เช่น วันที่/เวลา) ให้ใช้ .f ถ้าไม่มีให้ใช้ .v
+              cellValue = rows[i].c[j].f ? rows[i].c[j].f : rows[i].c[j].v;
+            }
+            td.textContent = cellValue;
+            tr.appendChild(td);
+         }
+         tbody.appendChild(tr);
+         count++;
+      }
+    };
+
+    // เริ่มดึงข้อมูลครั้งแรกทันทีที่เปิดเว็บ
+    fetchSheetData();
+    
+    // สั่งให้อัปเดตข้อมูลอัตโนมัติ ทุกๆ 5 วินาที
+    setInterval(fetchSheetData, 5000);
+  </script>
 </body>
 </html>

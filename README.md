@@ -1,7 +1,7 @@
 # 🚨 Real-Time Ultrasonic Security Radar (with Discord Alerts)
 
 ![Arduino](https://img.shields.io/badge/-Arduino-00979D?style=for-the-badge&logo=Arduino&logoColor=white)
-![C++](https://img.shields.io/badge/C++-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)
+![C++](https://img.shields.io/badge/C-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 ![Discord API](https://img.shields.io/badge/Discord%20Webhook-5865F2?style=for-the-badge&logo=discord&logoColor=white)
 
 A high-performance, real-time security system built on the **Arduino Uno R4 WiFi**. It uses an HC-SR04 ultrasonic sensor to detect intruders and instantly sends a notification to a Discord server via Webhooks, without blocking the main processor loop.

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Ergonomic & Posture Monitor - Physical Computing 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Prompt', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 24px 16px;
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      padding: 32px 0 24px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 32px;
+    }
+    .badge {
+      display: inline-block;
+      background: #dbeafe;
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+    h1 { font-size: 1.8rem; margin-bottom: 8px; }
+    .members { color: var(--muted); font-size: 0.95rem; }
+    
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    h2 {
+      font-size: 1.3rem;
+      color: var(--primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .video-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #000;
+      margin-top: 12px;
+    }
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      border: 0;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: Consolas, monospace;
+      font-size: 0.88rem;
+    }
+    .btn {
+      display: inline-block;
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 500;
+      margin-top: 12px;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #1d4ed8; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <span class="badge">Physical Computing Project 2026 - IT KMITL</span>
+      <h1>Motion Tracking Radar</h1>
+      <p class="members">ผู้จัดทำ: 68070260 ดนุพล จิ้วพงศสวัสดิ์ | 68070249 ณัฐชนน แสงศรี | 68070324 อริยะ คุณรัตนโอฬาร | 68070298 พิสิษฐ์ ธิติเสรีวงศ์</p>
+    </header>
+
+    <!-- 1. บทคัดย่อ (Abstract) -->
+    <section>
+      <h2>📄 บทคัดย่อ (Abstract)</h2>
+      <p>
+        โครงงานนี้นำเสนอระบบเฝ้าระวังพื้นที่ระยะไกลเพื่อแก้ปัญหาการพลาดการรับรู้ต่อสิ่งแวดล้อมหรือเหตุการณ์ภายนอกขณะที่ไม่อยู่ในบริเวณนั้น โดยระบบใช้เซนเซอร์วัดระยะทางอัลตราโซนิก (Ultrasonic Sensor) ทำหน้าที่ตรวจจับการเคลื่อนไหวหรือการบุกรุกพื้นที่ เมื่อพบวัตถุเข้ามาในระยะที่กำหนด ไมโครคอนโทรลเลอร์จะประมวลผลและส่งสัญญาณแจ้งเตือนแบบครอบคลุม ทั้งในพื้นที่จริงผ่านเสียงสัญญาณเตือน (Buzzer) และไฟแสดงสถานะ (LED) รวมถึงส่งการแจ้งเตือนทันทีไปยังผู้ใช้ผ่าน LINE Notification ช่วยให้รับรู้เหตุการณ์ได้อย่างรวดเร็วและเพิ่มความปลอดภัยให้กับพื้นที่แม้ไม่ได้อยู่ในจุดเกิดเหตุ      </p>
+    </section>
+
+    <!-- 2. รายละเอียดและหลักการทำงาน -->
+    <section>
+      <h2>⚙️ รายละเอียดระบบและหลักการทำงาน</h2>
+      <ul>
+        <li><strong>Input:</strong> ระยะห่างจากเซนเซอร์อัลตราโซนิก (HC-SR04), ปุ่มกด Reset/Setup</li>
+        <li><strong>Processing:</strong> ไมโครคอนโทรลเลอร์ ESP32 ตรวจจับเงื่อนไขระยะห่าง</li>
+        <li><strong>Output:</strong> สัญญาณเตือน Buzzer และหลอดไฟ LED แสดงสถานะการเคลื่อนไหว</li>
+      </ul>
+    </section>
+
+    <!-- 3. Clip VDO (YouTube > 5 นาที) -->
+    <section>
+      <h2>🎬 คลิปวิดีโอสาธิตการทำงาน</h2>
+      <p style="font-size: 0.9rem; color: var(--muted);">
+        วิดีโอนี้อธิบายการทำงานของระบบ แสดงตัวชิ้นงานฮาร์ดแวร์จริง และเห็นหน้าสมาชิกทุกคนในกลุ่มครบถ้วน
+      </p>
+      <div class="video-wrapper">
+        <!-- นำ VIDEO_ID ของคลิป YouTube มาแทนที่ตรง YOUR_YOUTUBE_VIDEO_ID -->
+        <iframe src="https://www.youtube.com/embed/YOUR_YOUTUBE_VIDEO_ID" title="Project Demo Video" allowfullscreen></iframe>
+      </div>
+    </section>
+
+    <!-- 4. โปสเตอร์ขนาด A1 -->
+    <section>
+      <h2>📊 โปสเตอร์ขนาด A1</h2>
+      <p>สรุปแนวคิด โครงสร้างระบบ และผลการทำงานของโครงงาน</p>
+      <!-- เปลี่ยนลิงก์ไปยังไฟล์ PDF หรือรูปภาพโปสเตอร์ที่อัปโหลดไว้ -->
+      <a href="./poster_a1.pdf" target="_blank" class="btn">📥 ดาวน์โหลด / ดูโปสเตอร์ขนาดเต็ม (PDF)</a>
+    </section>
+
+    <!-- 5. Source Code -->
+    <section>
+      <h2>💻 Source Code</h2>
+      <pre><code>// ตัวอย่างโค้ดควบคุมระบบตรวจจับท่านั่ง (ESP32 / Arduino)
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+// Ultrasonic sensor settings
+const int trigPin = 11;
+const int echoPin = 10;
+
+// LED and buzzer (active buzzer controlled via digitalWrite)
+const int redLed = 3;
+const int greenLed = 4;
+const int buzzer = 2;
+
+// Initialize the LCD (16x2). Check the I2C address (commonly 0x27 or 0x3F)
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Settings
+const int alertDistance = 150;           // Alarm triggers if distance is less than 150cm
+const unsigned long checkInterval = 60;  // Measurement interval (ms)
+unsigned long lastCheckTime = 0;
+
+// Variable to count consecutive detections under threshold
+int triggerCount = 0;
+
+// Enum to record state (for updating LCD only when state changes)
+enum RadarState { EMPTY, WARNING };
+RadarState lastState = EMPTY;
+
+void setup() {
+  // Initialize ultrasonic sensor pins
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  // Initialize LED and buzzer pins
+  pinMode(redLed, OUTPUT);
+  pinMode(greenLed, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+
+  // Initialize LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+
+  // Set initial status: LCD shows "Area is Empty", green LED on
+  lcdSetEmpty();
+  setNormalState();
+}...
+</code></pre>
+      <div style="margin-top: 16px;">
+        <a href="https://github.com/gottalog1n/phycom_project.git" target="_blank" style="color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+          ↗ ดู Source Code ฉบับเต็มบน GitHub Repository
+        </a>
+      </div>
+    </section>
+
+    <footer>
+      Physical Computing 2026 — School of Information Technology, KMITL
+    </footer>
+  </div>
+
+</body>
+</html>

@@ -1,84 +1,97 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <WiFiS3.h> 
 
-// Ultrasonic sensor settings
+// --- 1. ตั้งค่า Wi-Fi ---
+const char* ssid = "Aldnii";
+const char* password = "0937719597n";
+
+// --- 2. ตั้งค่า Discord Bot (Direct Message) ---
+const char* botToken = "MTU2NDE2MTQ5NDc0MzEyNjA3Ng.GpxYO7.YUoyDnm_zzXStbel0RPzldoSf4MvHWXLbHuuF4";       
+const char* dmChannelId = "1564163123085316187"; 
+
+// --- 3. ตั้งค่า Google Sheets Web App ---
+const char* sheetsHost = "script.google.com";
+const char* sheetsPath = "/macros/s/AKfycbyGgKrs735scxnvegCuG1x0A0hHVYHL4maWfQ7a-j57Yr627lk06mLY5tPf7EscDzKQLA/exec";
+
+// --- 4. ตั้งค่าขาอุปกรณ์ ---
 const int trigPin = 11;
 const int echoPin = 10;
-
-// LED and buzzer (active buzzer controlled via digitalWrite)
 const int redLed = 3;
 const int greenLed = 4;
 const int buzzer = 2;
 
-// Initialize the LCD (16x2). Check the I2C address (commonly 0x27 or 0x3F)
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+WiFiSSLClient client;
 
-// Settings
-const int alertDistance = 150;           // Alarm triggers if distance is less than 150cm
-const unsigned long checkInterval = 60;  // Measurement interval (ms)
+// --- 5. ตัวแปรระบบ ---
+const int alertDistance = 150;           
+const unsigned long checkInterval = 50; 
 unsigned long lastCheckTime = 0;
 
-// Variable to count consecutive detections under threshold
-int triggerCount = 0;
+unsigned long lastDiscordAlertTime = 0;
+const unsigned long alertCooldown = 2000; 
 
-// Enum to record state (for updating LCD only when state changes)
+unsigned long lastBlinkTime = 0;
+bool blinkState = false;
+
 enum RadarState { EMPTY, WARNING };
 RadarState lastState = EMPTY;
 
-void setup() {
-  // Initialize ultrasonic sensor pins
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+// --- ตัวแปรสถานะ Wi-Fi ---
+bool wifiConnected = false;
+unsigned long lastWifiCheck = 0;
+const unsigned long reconnectInterval = 5000; // พยายามเชื่อมต่อใหม่ทุกๆ 5 วินาที
 
-  // Initialize LED and buzzer pins
-  pinMode(redLed, OUTPUT);
-  pinMode(greenLed, OUTPUT);
-  pinMode(buzzer, OUTPUT);
-
-  // Initialize LCD
-  lcd.init();
-  lcd.backlight();
-  lcd.clear();
-
-  // Set initial status: LCD shows "Area is Empty", green LED on
-  lcdSetEmpty();
-  setNormalState();
-}
-
-void loop() {
-  unsigned long currentMillis = millis();
-
-  // Perform distance measurement at regular intervals
-  if (currentMillis - lastCheckTime >= checkInterval) {
-    lastCheckTime = currentMillis;
-
-    float distance = getDistance();
-
-    if (distance > 0 && distance < alertDistance) {
-      triggerCount++;  // Count consecutive detections under threshold
-    } else {
-      triggerCount = 0; // Reset counter if measurement is safe
-    }
-
-    // Trigger alarm only if detected 5 times consecutively
-    if (triggerCount >= 5) {
-      if (lastState != WARNING) {
-        lastState = WARNING;
-        lcdSetWarning();
-      }
-      alertMode();
-      triggerCount = 0; // Reset counter after alarm mode
-    } else {
-      if (lastState != EMPTY) {
-        lastState = EMPTY;
-        lcdSetEmpty();
-        setNormalState();
-      }
+// --- ฟังก์ชันบันทึกลง Google Sheets ---
+void logToGoogleSheets(float distance) {
+  if (WiFi.status() == WL_CONNECTED) {
+    WiFiSSLClient sheetsClient;
+    sheetsClient.setTimeout(2000); 
+    
+    if (sheetsClient.connect(sheetsHost, 443)) {
+      String payload = "{\"distance\":\"" + String(distance, 1) + "\", \"status\":\"Detected\"}";
+      
+      sheetsClient.println(String("POST ") + sheetsPath + " HTTP/1.1");
+      sheetsClient.println(String("Host: ") + sheetsHost);
+      sheetsClient.println("Content-Type: application/json");
+      sheetsClient.print("Content-Length: ");
+      sheetsClient.println(payload.length());
+      sheetsClient.println("Connection: close");
+      sheetsClient.println();
+      sheetsClient.println(payload);
+      
+      sheetsClient.stop();
+      Serial.println("Logged to Google Sheets!");
     }
   }
 }
 
-// Measure distance using the ultrasonic sensor (returns distance in cm)
+// --- ฟังก์ชันส่ง Direct Message ---
+void sendDiscordDM(String message) {
+  if (WiFi.status() == WL_CONNECTED) {
+    client.setTimeout(2000);
+    
+    if (client.connect("discord.com", 443)) {
+      String payload = "{\"content\":\"" + message + "\"}";
+      String discordPath = "/api/v10/channels/" + String(dmChannelId) + "/messages";
+      
+      client.println("POST " + discordPath + " HTTP/1.1");
+      client.println("Host: discord.com");
+      client.println("Authorization: Bot " + String(botToken)); 
+      client.println("Content-Type: application/json");
+      client.print("Content-Length: ");
+      client.println(payload.length());
+      client.println("Connection: close");
+      client.println(); 
+      client.println(payload); 
+      
+      client.stop(); 
+      Serial.println("Discord DM Sent!");
+    }
+  }
+}
+
 float getDistance() {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
@@ -86,42 +99,17 @@ float getDistance() {
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
 
-  long duration = pulseIn(echoPin, HIGH, 30000);  // Wait for a maximum of 30ms
-  if (duration == 0) return 999.0;                // Timeout or out of range
-  float distance = duration * 0.034 / 2;          // Calculate distance (cm)
-  return distance;
+  long duration = pulseIn(echoPin, HIGH, 30000); 
+  if (duration == 0) return 999.0;
+  return duration * 0.034 / 2.0;
 }
 
-// Alarm mode: if an object is detected, continuously alarm until cleared
-void alertMode() {
-  // Turn off green LED while in alarm mode
-  digitalWrite(greenLed, LOW);
-
-  // Keep alarming until the object is removed
-  while (getDistance() < alertDistance) {
-    // Flash red LED and activate buzzer
-    digitalWrite(redLed, HIGH);
-    digitalWrite(buzzer, HIGH);
-    delay(100);
-    digitalWrite(redLed, LOW);
-    digitalWrite(buzzer, LOW);
-    delay(100);
-  }
-
-  // When safe, exit alarm mode and update status
-  lcdSetEmpty();
-  setNormalState();
-  lastState = EMPTY;
-}
-
-// Set normal status: green LED on, red LED and buzzer off
 void setNormalState() {
   digitalWrite(greenLed, HIGH);
   digitalWrite(redLed, LOW);
   digitalWrite(buzzer, LOW);
 }
 
-// LCD display "Area is Empty" centered on the first line
 void lcdSetEmpty() {
   lcd.clear();
   lcd.setCursor(1, 0);
@@ -130,11 +118,130 @@ void lcdSetEmpty() {
   lcd.print("                ");
 }
 
-// LCD display warning message: "WARNING!!" and "Foreign Body"
 void lcdSetWarning() {
   lcd.clear();
   lcd.setCursor(4, 0);
   lcd.print("WARNING!!");
   lcd.setCursor(2, 1);
   lcd.print("Foreign Body");
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(redLed, OUTPUT);
+  pinMode(greenLed, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+
+  Wire.begin();
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Connecting WiFi");
+  
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  wifiConnected = true;
+  Serial.println("\nWiFi Connected!");
+  lcdSetEmpty();
+  setNormalState();
+}
+
+void loop() {
+  unsigned long currentMillis = millis();
+
+  // ---------------------------------------------------------
+  // 1. ระบบเช็คและ Reconnect Wi-Fi
+  // ---------------------------------------------------------
+  if (WiFi.status() != WL_CONNECTED) {
+    
+    // ทำงานครั้งแรกที่ตรวจพบว่าเน็ตหลุด
+    if (wifiConnected) {
+      wifiConnected = false;
+      Serial.println("⚠️ Alert: Wi-Fi Disconnected! Stopping radar...");
+      
+      // ปิดระบบตรวจจับทั้งหมด (ไฟและเสียง)
+      digitalWrite(greenLed, LOW);
+      digitalWrite(redLed, LOW);
+      digitalWrite(buzzer, LOW);
+      
+      // แสดงข้อความกำลังเชื่อมต่อใหม่
+      lcd.clear();
+      lcd.setCursor(2, 0);
+      lcd.print("Wi-Fi Lost!");
+      lcd.setCursor(0, 1);
+      lcd.print("Reconnecting...");
+    }
+
+    // พยายามเชื่อมต่อใหม่ทุกๆ 5 วินาที
+    if (currentMillis - lastWifiCheck >= reconnectInterval) {
+      lastWifiCheck = currentMillis;
+      Serial.println("Attempting to reconnect Wi-Fi...");
+      WiFi.begin(ssid, password); // สั่งเชื่อมต่อใหม่
+    }
+    
+    return; // สำคัญ: ออกจาก loop() ไปเลย ไม่ต้องรันคำสั่งเซนเซอร์ด้านล่างจนกว่าเน็ตจะมา
+  }
+
+  // หากเพิ่งกลับมาเชื่อมต่อ Wi-Fi สำเร็จ
+  if (!wifiConnected) {
+    wifiConnected = true;
+    Serial.println("✅ Wi-Fi Reconnected! Resuming radar...");
+    
+    // รีเซ็ตหน้าจอและเปิดไฟสถานะการทำงานปกติกลับมา
+    lastState = EMPTY;
+    lcdSetEmpty();
+    setNormalState();
+  }
+
+  // ---------------------------------------------------------
+  // 2. การทำงานของ Radar (จะทำงานเฉพาะตอนมี Wi-Fi เท่านั้น)
+  // ---------------------------------------------------------
+  if (currentMillis - lastCheckTime >= checkInterval) {
+    lastCheckTime = currentMillis;
+    float distance = getDistance();
+
+    if (distance > 0 && distance < alertDistance) {
+      
+      if (lastState != WARNING) {
+        lastState = WARNING;
+        lcdSetWarning();
+        digitalWrite(greenLed, LOW);
+      }
+
+      // ล็อกดาวน์เรื่องการส่งสัญญาณเตือน
+      if (currentMillis - lastDiscordAlertTime >= alertCooldown) {
+        String alertText = "🚨 **แจ้งเตือนความปลอดภัย:** ตรวจพบวัตถุในระยะ **" + String(distance, 1) + " cm**!";
+        
+        logToGoogleSheets(distance);
+        sendDiscordDM(alertText);
+        
+        lastDiscordAlertTime = millis();
+      }
+
+      // ไฟแดงและเสียงกะพริบแจ้งเตือนบุกรุก
+      if (currentMillis - lastBlinkTime >= 100) {
+        blinkState = !blinkState;
+        digitalWrite(redLed, blinkState);
+        digitalWrite(buzzer, blinkState);
+        lastBlinkTime = currentMillis;
+      }
+
+    } 
+    else {
+      if (lastState != EMPTY) {
+        lastState = EMPTY;
+        lcdSetEmpty();
+        setNormalState();
+      }
+    }
+  }
 }

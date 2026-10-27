@@ -26,6 +26,7 @@
 
 ## Poster
 [View Motion Tracking Radar PDF](<Motion Tracking Radar.pdf>)
+![Motion Tracking Radar](<Motion Tracking Radar.png>)
 
 ## 🛠 ฮาร์ดแวร์และการต่อวงจร (Hardware & Pinout)
 

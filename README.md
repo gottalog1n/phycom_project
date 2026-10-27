@@ -24,6 +24,9 @@
 
 ---
 
+## Poster
+![Alt text](main/Motion%20Tracking%20Radar.pdf)
+
 ## 🛠 ฮาร์ดแวร์และการต่อวงจร (Hardware & Pinout)
 
 | อุปกรณ์ (Component) | พินที่เชื่อมต่อ (Pin Assignment) | หน้าที่การทำงาน |

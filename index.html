@@ -216,8 +216,13 @@
         วิดีโอนี้อธิบายการทำงานของระบบ แสดงตัวชิ้นงานฮาร์ดแวร์จริง และเห็นหน้าสมาชิกทุกคนในกลุ่มครบถ้วน (ความยาวเกิน 5 นาที)
       </p>
       <div class="video-wrapper">
-        <!-- นำ VIDEO_ID ของคลิป YouTube มาแทนที่ตรง YOUR_YOUTUBE_VIDEO_ID -->
-        <iframe src="https://www.youtube.com/embed/RfZ9PW9qHAw" title="Project Demo Video" allowfullscreen></iframe>
+        <iframe 
+          src="https://www.youtube.com/embed/RfZ9PW9qHAw" 
+          title="Project Demo Video" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          allowfullscreen>
+        </iframe>
       </div>
     </section>
 
@@ -225,7 +230,9 @@
     <section>
       <h2>📊 โปสเตอร์ขนาด A1</h2>
       <p>สรุปแนวคิด โครงสร้างระบบ แผนผังวงจร และผลการทดสอบการทำงานของโครงงาน</p>
-      <a href="./Motion Tracking Rader.pdf" target="_blank" class="btn">📥 ดาวน์โหลด / ดูโปสเตอร์ขนาดเต็ม (PDF)</a>
+      <a href="./Motion%20Tracking%20Radar.pdf" download="Motion_Tracking_Radar.pdf" target="_blank" class="btn">
+        📥 ดาวน์โหลด / ดูโปสเตอร์ขนาดเต็ม (PDF)
+      </a>
     </section>
 
     <!-- 5. Source Code -->
@@ -395,31 +402,26 @@ void lcdSetWarning() {
 
   </div> <!-- ปิด container -->
 
-  <!-- Script ดึงข้อมูลจาก Google Sheets -->
   <!-- Script ดึงข้อมูลจาก Google Sheets (เวอร์ชันทะลุบล็อก CORS ด้วย JSONP) -->
   <script>
     const SHEET_ID = '1dzfHUYABKal1gT6QtXiXnrTFoDSURhA1aIOOD49Yhno';
-    // ใช้ tqx=responseHandler:handleData เพื่อให้ Google ส่งกลับมาเป็นสคริปต์ แทนที่จะเป็นไฟล์ ทำให้เบราว์เซอร์ไม่บล็อก
+    // ใช้ tqx=responseHandler:handleData เพื่อให้ Google ส่งกลับมาเป็นสคริปต์ ป้องกันปัญหา CORS
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=responseHandler:handleData`;
 
-    // ฟังก์ชันนี้จะเป็นตัวดึงข้อมูล
     function fetchSheetData() {
       const script = document.createElement('script');
       script.src = SHEET_URL;
       
-      // เมื่อโหลดเสร็จให้ลบสคริปต์ทิ้งเพื่อไม่ให้รกหน้า HTML
       script.onload = () => script.remove();
       
-      // ดักจับกรณีที่ Google Sheets ขัดข้อง
       script.onerror = () => {
         document.getElementById('sheet-data-body').innerHTML = 
-          '<tr><td colspan="4" style="text-align: center; color: red;">โหลดข้อมูลไม่สำเร็จ (ลองตรวจสอบอินเทอร์เน็ตหรือลิงก์ Sheet)</td></tr>';
+          '<tr><td colspan="4" style="text-align: center; color: red;">โหลดข้อมูลไม่สำเร็จ (ลองตรวจสอบอินเทอร์เน็ตหรือสิทธิ์การเข้าถึงไฟล์ Google Sheets)</td></tr>';
       };
       
       document.body.appendChild(script);
     }
 
-    // ฟังก์ชันนี้จะถูกเรียกอัตโนมัติเมื่อข้อมูลถูกส่งกลับมาจาก Google
     window.handleData = function(data) {
       const tbody = document.getElementById('sheet-data-body');
       const rows = data.table.rows;
@@ -442,7 +444,6 @@ void lcdSetWarning() {
             const td = document.createElement('td');
             let cellValue = "";
             if (rows[i].c[j]) {
-              // ถ้าข้อมูลจัด format มาแล้ว (เช่น วันที่/เวลา) ให้ใช้ .f ถ้าไม่มีให้ใช้ .v
               cellValue = rows[i].c[j].f ? rows[i].c[j].f : rows[i].c[j].v;
             }
             td.textContent = cellValue;
@@ -456,7 +457,7 @@ void lcdSetWarning() {
     // เริ่มดึงข้อมูลครั้งแรกทันทีที่เปิดเว็บ
     fetchSheetData();
     
-    // สั่งให้อัปเดตข้อมูลอัตโนมัติ ทุกๆ 5 วินาที
+    // อัปเดตข้อมูลอัตโนมัติ ทุกๆ 5 วินาที
     setInterval(fetchSheetData, 5000);
   </script>
 </body>
